@@ -1,10 +1,8 @@
 import time
-
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import requests
 from bs4 import BeautifulSoup
-
 
 def scrape_upcoming_movies():
     url = "https://www.kinopoisk.ru/lists/movies/planned-to-watch-films/"
@@ -49,9 +47,6 @@ def scrape_kinopoisk(title):
     try:
         response = requests.get(search_url, headers=headers, timeout=10)
 
-        # Сохраняем HTML в файл для отладки
-        with open("kinopoisk_search.html", "w", encoding="utf-8") as f:
-            f.write(response.text)
 
         soup = BeautifulSoup(response.content, "html.parser")
         first_result = soup.select_one(".search_results .element.most_wanted")
