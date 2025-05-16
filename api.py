@@ -15,7 +15,7 @@ def get_random_quote():
         with open(file_path, "r", encoding="utf-8") as f:
             quotes = json.load(f)
         if not quotes:
-            return "Цитаты не найдены."
+            return "Цитаты не найдены. "
         quote_data = random.choice(quotes)
         return f"💬 \"{quote_data['quote']}\"\n🎭 {quote_data['character']}\n🎬 {quote_data['movie']}"
     except Exception as e:

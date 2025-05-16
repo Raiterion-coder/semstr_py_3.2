@@ -41,7 +41,7 @@ def get_top_films(year: int, top_n: int = 5) -> str:
             except json.JSONDecodeError:
                 continue
 
-    return "❌ Не удалось найти фильмы за этот год."
+    return "❌Не удалось найти фильмы за этот год."
 
 
 
