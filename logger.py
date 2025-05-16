@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+
 def log_interaction(update, response):
     user = update.effective_user
     user_id = user.id

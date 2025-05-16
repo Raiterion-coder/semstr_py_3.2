@@ -1,4 +1,3 @@
-
 import logging
 import os
 from dotenv import load_dotenv
@@ -9,7 +8,7 @@ from telegram.ext import (
 )
 
 from api import get_rating, get_summary, get_random_quote, get_random_film
-from kino_scraper import scrape_kinopoisk,get_top_films
+from kino_scraper import scrape_kinopoisk, get_top_films
 from logger import log_interaction
 
 load_dotenv()
@@ -20,7 +19,6 @@ logging.basicConfig(level=logging.INFO)
 # Состояния для ConversationHandler
 RATING, SUMMARY, KINOPOISK = range(3)
 TOPFILMS = 4  # после RATING, SUMMARY, KINOPOISK
-
 
 # Кнопки для команд
 buttons = [
@@ -85,13 +83,16 @@ async def kinopoisk_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Введите название фильма для поиска на Кинопоиске:", reply_markup=ReplyKeyboardRemove()
     )
     return KINOPOISK
- # Импортируем скрапер
+
+
+# Импортируем скрапер
 
 async def topfilms_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Введите год (например, 2021):", reply_markup=ReplyKeyboardRemove()
     )
     return TOPFILMS
+
 
 async def handle_topfilms(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -128,7 +129,6 @@ async def quote(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # -- Ожидаемые фильмы --
-
 
 
 # Создаем приложение и добавляем обработчики

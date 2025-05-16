@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import random
 import json
 import os
+
 load_dotenv()
 OMDB_API_KEY = os.getenv("OMDB_API_KEY")
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
@@ -30,11 +31,42 @@ def get_rating(title):
     data = r.json()
     if data.get("Response") == "False":
         return None
+
     ratings_list = data.get("Ratings", [])
     if not ratings_list:
         return None
-    ratings = "\n".join([f"{r['Source']}: {r['Value']}" for r in ratings_list])
-    return ratings
+
+    ratings_lines = []
+    for r in ratings_list:
+        source = r['Source']
+        value = r['Value']
+
+        if source == "Internet Movie Database":
+            # IMDB: "8.7/10" -> преобразуем в 0-5 звёзд
+            imdb_rating = float(value.split('/')[0])
+            stars = round(imdb_rating / 2)  # преобразуем 0-10 в 0-5
+            star_str = "★" * stars + "☆" * (5 - stars)
+            ratings_lines.append(f"⭐IMDb: {star_str} ({value})")
+
+        elif source == "Rotten Tomatoes":
+            # Rotten Tomatoes: "73%" -> преобразуем в 0-5 звёзд
+            rt_rating = int(value.replace('%', ''))
+            stars = round(rt_rating / 20)  # преобразуем 0-100 в 0-5
+            star_str = "★" * stars + "☆" * (5 - stars)
+            ratings_lines.append(f"⭐Rotten Tomatoes: {star_str} ({value})")
+
+        elif source == "Metacritic":
+            # Metacritic: "74/100" -> преобразуем в 0-5 звёзд
+            mc_rating = int(value.split('/')[0])
+            stars = round(mc_rating / 20)  # преобразуем 0-100 в 0-5
+            star_str = "★" * stars + "☆" * (5 - stars)
+            ratings_lines.append(f"⭐Metacritic: {star_str} ({value})")
+
+        else:
+            # Для других источников выводим как есть
+            ratings_lines.append(f"{source}: {value}")
+
+    return "\n".join(ratings_lines)
 
 
 def get_summary(title):
@@ -48,7 +80,7 @@ def get_summary(title):
     plot = data.get("Plot")
     if not plot or plot == "N/A":
         return None
-    return '📃'+plot
+    return f"📃Описание фильма {title}📃 \n {plot}"
 
 
 def get_random_film():
@@ -83,6 +115,3 @@ def get_random_film():
         result += f"\n{rating}"
 
     return result
-
-
-

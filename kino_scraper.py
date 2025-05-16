@@ -4,10 +4,9 @@ from selenium.webdriver.chrome.options import Options
 import requests
 from bs4 import BeautifulSoup
 
-
-
 import requests
 from bs4 import BeautifulSoup
+
 
 def get_top_films(year: int, top_n: int = 5) -> str:
     url = f"https://www.film.ru/a-z/movies/{year}"
@@ -44,14 +43,12 @@ def get_top_films(year: int, top_n: int = 5) -> str:
     return "❌ Не удалось найти фильмы за этот год."
 
 
-
 def scrape_kinopoisk(title):
     search_url = f"https://www.kinopoisk.ru/index.php?kp_query={title}"
     headers = {"User-Agent": "Mozilla/5.0"}
 
     try:
         response = requests.get(search_url, headers=headers, timeout=10)
-
 
         soup = BeautifulSoup(response.content, "html.parser")
         first_result = soup.select_one(".search_results .element.most_wanted")
