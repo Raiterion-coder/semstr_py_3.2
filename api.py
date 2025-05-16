@@ -48,7 +48,7 @@ def get_summary(title):
     plot = data.get("Plot")
     if not plot or plot == "N/A":
         return None
-    return plot
+    return '📃'+plot
 
 
 def get_random_film():
@@ -77,7 +77,7 @@ def get_random_film():
     result += "\n"
 
     if summary:
-        result += f"📃 {summary}\n"
+        result += f"{summary}\n"
 
     if rating:
         result += f"\n{rating}"

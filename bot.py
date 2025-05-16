@@ -9,7 +9,7 @@ from telegram.ext import (
 )
 
 from api import get_rating, get_summary, get_random_quote, get_random_film
-from kino_scraper import scrape_kinopoisk, scrape_upcoming_movies
+from kino_scraper import scrape_kinopoisk,get_top_films
 from logger import log_interaction
 
 load_dotenv()
@@ -19,25 +19,30 @@ logging.basicConfig(level=logging.INFO)
 
 # Состояния для ConversationHandler
 RATING, SUMMARY, KINOPOISK = range(3)
+TOPFILMS = 4  # после RATING, SUMMARY, KINOPOISK
+
 
 # Кнопки для команд
 buttons = [
     ["/rating", "/summary"],
     ["/kinopoisk", "/randomfilm"],
-    ["/quote"]
+    ["/quote", "/topfilms"]
 ]
 reply_markup = ReplyKeyboardMarkup(buttons, resize_keyboard=True)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    response = ("🎬 *Привет! Я бот для киноманов!*\n\n"
+    response = (
+        "🎬 *Привет! Я бот для киноманов!*\n\n"
         "Выбери одну из команд ниже или введи её:\n\n"
         "⭐ /rating — получить рейтинг фильма \n"
         "📝 /summary — получить краткое описание фильма\n"
         "🔍 /kinopoisk — поиск фильма на Кинопоиске\n"
         "🎲 /randomfilm — случайный фильм с описанием и рейтингами\n"
-        "💬 /quote — случайная цитата из фильма\n"
-        "Просто нажми на кнопку или введи команду, а я помогу!")
+        "📅 /topfilms — топ-5 фильмов по году с сайта Film.ru\n"
+        "💬 /quote — случайная цитата из фильма\n\n"
+        "Просто нажми на кнопку или введи команду, а я помогу!"
+    )
     await update.message.reply_text(response, reply_markup=reply_markup)
     log_interaction(update, response)
 
@@ -80,6 +85,24 @@ async def kinopoisk_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Введите название фильма для поиска на Кинопоиске:", reply_markup=ReplyKeyboardRemove()
     )
     return KINOPOISK
+ # Импортируем скрапер
+
+async def topfilms_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Введите год (например, 2021):", reply_markup=ReplyKeyboardRemove()
+    )
+    return TOPFILMS
+
+async def handle_topfilms(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        year = int(update.message.text.strip())
+        response = get_top_films(year)
+    except ValueError:
+        response = "❌ Пожалуйста, введите корректный год (например, 2021)."
+
+    await update.message.reply_text(response, reply_markup=reply_markup, parse_mode="Markdown")
+    log_interaction(update, response)
+    return ConversationHandler.END
 
 
 async def handle_kinopoisk(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -105,10 +128,7 @@ async def quote(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # -- Ожидаемые фильмы --
-async def upcoming(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    response = scrape_upcoming_movies()
-    await update.message.reply_text(response, reply_markup=reply_markup)
-    log_interaction(update, response)
+
 
 
 # Создаем приложение и добавляем обработчики
@@ -123,6 +143,13 @@ app.add_handler(
     ConversationHandler(
         entry_points=[CommandHandler("rating", rating_command)],
         states={RATING: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_rating)]},
+        fallbacks=[],
+    )
+)
+app.add_handler(
+    ConversationHandler(
+        entry_points=[CommandHandler("topfilms", topfilms_command)],
+        states={TOPFILMS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_topfilms)]},
         fallbacks=[],
     )
 )

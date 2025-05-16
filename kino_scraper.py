@@ -4,40 +4,45 @@ from selenium.webdriver.chrome.options import Options
 import requests
 from bs4 import BeautifulSoup
 
-def scrape_upcoming_movies():
-    url = "https://www.kinopoisk.ru/lists/movies/planned-to-watch-films/"
 
-    # Настройки для headless режима
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--no-sandbox")
 
-    # Запускаем Chrome
-    driver = webdriver.Chrome(options=options)
-    driver.get(url)
+import requests
+from bs4 import BeautifulSoup
 
-    # Даем время на загрузку JS-контента
-    time.sleep(5)
+def get_top_films(year: int, top_n: int = 5) -> str:
+    url = f"https://www.film.ru/a-z/movies/{year}"
+    headers = {"User-Agent": "Mozilla/5.0"}
 
-    # Получаем HTML
-    html = driver.page_source
-    driver.quit()
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+    except requests.RequestException:
+        return "⚠️ Не удалось загрузить данные с сайта."
 
-    # Парсим HTML
-    soup = BeautifulSoup(html, "html.parser")
-    movies = soup.find_all("img", class_="styles_image__gRXvn")
+    soup = BeautifulSoup(response.text, "html.parser")
+    script_tags = soup.find_all("script", type="application/ld+json")
 
-    if not movies:
-        return "Не удалось найти ожидаемые фильмы на Кинопоиске."
+    for script in script_tags:
+        if "ItemList" in script.text and f"{year}" in script.text:
+            import json
+            try:
+                data = json.loads(script.string)
+                films = data.get("itemListElement", [])[:top_n]
+                if not films:
+                    return "❌ Не найдено фильмов."
 
-    result = []
-    for movie in movies[:10]:
-        title = movie.get("alt")
-        if title:
-            result.append(f"🎬 {title}")
+                result = f"*Топ-{top_n} фильмов {year} года:*\n"
+                for item in films:
+                    movie = item["item"]
+                    title = movie.get("name", "Без названия")
+                    url = movie.get("url", "")
+                    result += f"🎬 [{title}]({url})\n"
+                return result
+            except json.JSONDecodeError:
+                continue
 
-    return "\n".join(result)
+    return "❌ Не удалось найти фильмы за этот год."
+
 
 
 def scrape_kinopoisk(title):
