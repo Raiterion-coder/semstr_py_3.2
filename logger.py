@@ -9,4 +9,4 @@ def log_interaction(update, response):
     with open(f"{folder}/{user_id}.log", "a", encoding="utf-8") as f:
         f.write(f"{datetime.now()} - {user.full_name} ({user_id})\n")
         f.write(f"User: {update.message.text}\n")
-        f.write(f" Bot: {response}\n\n")
+        f.write(f"Bot: {response}\n\n")
