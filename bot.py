@@ -17,8 +17,7 @@ TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 logging.basicConfig(level=logging.INFO)
 
 # Состояния для ConversationHandler
-RATING, SUMMARY, KINOPOISK = range(3)
-TOPFILMS = 4  # после RATING, SUMMARY, KINOPOISK
+RATING, SUMMARY, KINOPOISK, TOPFILMS = range(4)
 
 # Кнопки для команд
 buttons = [
@@ -45,7 +44,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     log_interaction(update, response)
 
 
-# -- Рейтинг --
+# Рейтинг фильма
 async def rating_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Введите название фильма для рейтинга на английском языке:", reply_markup=ReplyKeyboardRemove()
@@ -61,7 +60,7 @@ async def handle_rating(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 
-# -- Описание --
+# Описание фильма
 async def summary_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Введите название фильма для описания на английском языке:", reply_markup=ReplyKeyboardRemove()
@@ -77,16 +76,21 @@ async def handle_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 
-# -- Кинопоиск --
+# Кинопоиск
 async def kinopoisk_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Введите название фильма для поиска на Кинопоиске:", reply_markup=ReplyKeyboardRemove()
     )
     return KINOPOISK
 
+async def handle_kinopoisk(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    title = update.message.text
+    response = scrape_kinopoisk(title)
+    await update.message.reply_text(response, reply_markup=reply_markup)
+    log_interaction(update, response)
+    return ConversationHandler.END
 
-# Импортируем скрапер
-
+# Топ фильмов
 async def topfilms_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Введите год (например, 2021):", reply_markup=ReplyKeyboardRemove()
@@ -106,39 +110,29 @@ async def handle_topfilms(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 
-async def handle_kinopoisk(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    title = update.message.text
-    response = scrape_kinopoisk(title)
-    await update.message.reply_text(response, reply_markup=reply_markup)
-    log_interaction(update, response)
-    return ConversationHandler.END
-
-
-# -- Случайный фильм --
+# Случайный фильм
 async def randomfilm(update: Update, context: ContextTypes.DEFAULT_TYPE):
     response = get_random_film()
     await update.message.reply_text(response, reply_markup=reply_markup)
     log_interaction(update, response)
 
 
-# -- Цитата --
+# Цитата
 async def quote(update: Update, context: ContextTypes.DEFAULT_TYPE):
     response = get_random_quote()
     await update.message.reply_text(response, reply_markup=reply_markup)
     log_interaction(update, response)
 
 
-# -- Ожидаемые фильмы --
 
-
-# Создаем приложение и добавляем обработчики
+# Создание приложения и добавление обработчиков
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("quote", quote))
 app.add_handler(CommandHandler("randomfilm", randomfilm))
 
-# ConversationHandler для /rating
+# ConversationHandler
 app.add_handler(
     ConversationHandler(
         entry_points=[CommandHandler("rating", rating_command)],
@@ -146,6 +140,8 @@ app.add_handler(
         fallbacks=[],
     )
 )
+
+# ConversationHandler для /topfilms
 app.add_handler(
     ConversationHandler(
         entry_points=[CommandHandler("topfilms", topfilms_command)],
